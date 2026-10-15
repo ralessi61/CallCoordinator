@@ -1,7 +1,7 @@
 """Three simulated providers: no network, no API key.
 
 * ``fast``: quick and reliable.10–30 ms, never fails;
-* ``slow``: variable latency, sometimes times out.0.2–1 sec; wprobable timeout_rate that raises ProviderTimeoutError
+* ``slow``: variable latency, sometimes times out.0.2–1 sec; probable timeout_rate that raises ProviderTimeoutError
 * ``strict``: a tight quota; calls over the limit get a 429 (``RateLimitError``).
                at most max_calls per window seconds (list of timestamps under a threading.Lock); beyond that, RateLimitError
 some ideas takes from assistenza_clienti.py, which is a simple example of a token bucket rate limiter.

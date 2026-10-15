@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 # loads the dataclass decorator from the standard-library module dataclasses
 # @dataclass saves you from writing the constructor.
-from .exceptions import InvalidRequestError, ProviderTimeoutError, TransientError
+from .exceptions import TransientError
 import asyncio
 
 @dataclass

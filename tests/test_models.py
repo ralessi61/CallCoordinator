@@ -126,7 +126,7 @@ class ResponseValidationTests(unittest.TestCase):
         """ Local tests helper, return a valid CallResult, built from a dictionary with optional changes to the default values."""
 
         data = dict(
-            index=0, request_id="r1", document_id="d1", task_type=TaskType.SUMMARY,
+            request_id="r1", document_id="d1", task_type=TaskType.SUMMARY,
             status=CallStatus.FAILED, attempts=1, duration_seconds=0.1,
             error_type="ProviderTimeoutError", error_message="slow",
         )
@@ -134,13 +134,26 @@ class ResponseValidationTests(unittest.TestCase):
         return CallResult(**data)
 
     def test_failed_result_needs_error(self) -> None:
-        """Check that a failed CallResult must have an error_type and error_message."""
+        """Check that a failed CallResult must have an error_type , error_message optional."""
 
         with self.assertRaises(ValidationError):
             self._result(error_type=None)
 
-    def test_success_needs_response(self) -> None:
-        """Check that a successful CallResult must have a response and no error_type."""
+    def test_success_result_has_response_and_no_error(self) -> None:
+        """A successful CallResult requires a response and must not have an error_type."""
+
+        response = LlmResponse(
+            request_id="r1", provider="fast", content="answer", latency_seconds=0.1,
+        )
+        result = self._result(
+            status=CallStatus.SUCCESS, response=response, error_type=None,
+        )
+        self.assertEqual(result.status, CallStatus.SUCCESS)
+        self.assertIs(result.response, response)
+        self.assertIsNone(result.error_type)
+
+    def test_success_without_response_is_rejected(self) -> None:
+        """A successful CallResult without a response is invalid."""
 
         with self.assertRaises(ValidationError):
             self._result(status=CallStatus.SUCCESS, error_type=None)
