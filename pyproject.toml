@@ -1,0 +1,21 @@
+[project]
+name = "calls-coordinator"
+version = "0.1.0"
+description = "Batch coordinator for LLM provider calls (rate limiting, retry, metrics)"
+readme = "README.md"
+requires-python = ">=3.9,<4.0"
+authors = [{ name = "Roberto Alessi", email = "ralessi61@gmail.com" }]
+dependencies = ["pydantic>=2,<3"]
+
+[project.scripts]
+calls-coordinator = "calls_coordinator.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=7.4"]
+
+[tool.poetry]
+packages = [{ include = "calls_coordinator", from = "src" }]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
