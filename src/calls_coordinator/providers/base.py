@@ -58,7 +58,7 @@ class BaseProvider(metaclass=ProviderMeta):
         raise NotImplementedError
 
 
-def create_provider(name: str, **options: Any) -> BaseProvider:
+def create_provider(name: str) -> BaseProvider:
     """Instantiate a registered provider by name.
 
     Raises:
@@ -68,7 +68,7 @@ def create_provider(name: str, **options: Any) -> BaseProvider:
     if name not in ProviderMeta.registry:
         known = ", ".join(sorted(ProviderMeta.registry)) or "none"
         raise UnknownProviderError(f"unknown provider {name!r} (registered: {known})")
-    return ProviderMeta.registry[name](**options)
+    return ProviderMeta.registry[name]()
 
 
 def registered_providers() -> List[str]:

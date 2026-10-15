@@ -122,7 +122,8 @@ class ResponseValidationTests(unittest.TestCase):
         )
         self.assertEqual(response.content, "answer")
 
-    def _result(self, **changes):
+    @staticmethod
+    def _result(**changes):
         """ Local tests helper, return a valid CallResult, built from a dictionary with optional changes to the default values."""
 
         data = dict(

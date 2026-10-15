@@ -1,5 +1,6 @@
 """Exceptions: transient errors can be retried, permanent errors cannot."""
 
+
 class CoordinatorError(Exception):
     """Base class for every error raised by this library."""
 
@@ -7,7 +8,7 @@ class CoordinatorError(Exception):
 class PermanentError(CoordinatorError):
     """Repeating the call is useless."""
 
-    
+
 class TransientError(CoordinatorError):
     """Repeating the call may work."""
 

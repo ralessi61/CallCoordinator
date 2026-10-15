@@ -3,9 +3,10 @@
 import math
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
-#TaskType is an enumeration whose values are strings
+
+# TaskType is an enumeration whose values are strings
 class TaskType(str, Enum):
     """The three calls made for every document."""
 
@@ -15,7 +16,7 @@ class TaskType(str, Enum):
 
 
 class CallStatus(str, Enum):
-    ''' The status of a http call to an LLM.'''
+    """The status of an http call to an LLM."""
 
     SUCCESS = "success"
     FAILED = "failed"
@@ -40,7 +41,6 @@ class LlmRequest(BaseModel):
             data["provider"] = data["provider"].lower()
         return data
 
-
     # here no @classmethod because we want to validate the instance, not the class
     @model_validator(mode="after")
     def check_content(self):
@@ -54,10 +54,11 @@ class LlmRequest(BaseModel):
             raise ValueError(
                 f"LLM call temperature {self.temperature} is out of range: must be between 0 and 2"
             )
-        return self    
+        return self
+
+    # ge=0 rejects a negative integer; ge=0.0 rejects a negative float.
 
 
-# ge=0 rejects a negative integer; ge=0.0 rejects a negative float.
 class TokenUsage(BaseModel):
     """The token usage for a request."""
 
@@ -74,7 +75,7 @@ class TokenUsage(BaseModel):
             raise ValueError(
                 f"total_tokens is {self.total_tokens} but prompt + completion is {expected}"
             )
-        return self    
+        return self
 
 
 class LlmResponse(BaseModel):
@@ -93,7 +94,7 @@ class LlmResponse(BaseModel):
 
         if not self.content.strip():
             raise ValueError("content is empty")
-        return self  
+        return self
 
 
 class CallResult(BaseModel):
@@ -117,7 +118,7 @@ class CallResult(BaseModel):
                 raise ValueError("a successful result needs a response and no error")
         elif self.response is not None or not self.error_type:
             raise ValueError("a failed result needs an error_type and no response")
-        return self    
+        return self
 
 
 class BatchMetrics(BaseModel):
@@ -136,13 +137,13 @@ class BatchMetrics(BaseModel):
     # default_factory=dict tells Pydantic to call dict() when the field is omitted, so the stored value is {}
 
 
-class BatchResult(BaseModel):      
+class BatchResult(BaseModel):
     """The result of a batch of calls to the LLM."""
 
     results: List[CallResult] = Field(..., description="The results of the calls in the batch.")
     metrics: BatchMetrics = Field(..., description="The metrics for the batch of calls.")
 
-    #class methods
+    # class methods
     def by_request_id(self) -> Dict[str, CallResult]:
         """Map each request_id to its result."""
 
@@ -159,7 +160,7 @@ class BatchResult(BaseModel):
     def failures(self) -> List[CallResult]:
         """Return only the results whose status is FAILED."""
 
-        return [r for r in self.results if r.status is CallStatus.FAILED]    
+        return [r for r in self.results if r.status is CallStatus.FAILED]
 
 
 def validate_batch(requests: List[LlmRequest]) -> None:
@@ -186,27 +187,26 @@ def estimate_tokens(text: str) -> int:
 
 
 def _first_message(error: ValueError) -> str:
-    """Return the first error message from a Pydantic validation error."""
+    """Return the first error message from a Pydantic validation error.
 
-    # gets the errors attribute from error, or None if it doesn't exist
-    errors = getattr(error, "errors", None)
-    if callable(errors):
-        #  checks whether errors can be called like a function
-        first = errors()[0]
-        # If error.errors is a method, this calls it to get its first result
+    A plain ``ValueError`` is returned as text. A ``ValidationError`` is
+    formatted as ``field.path: message``, for example ``prompt: Field required``.
+    """
+
+    # ValidationError is a ValueError with an errors() method. isinstance
+    # tells the type checker that errors() exists, so it is not None.
+    if isinstance(error, ValidationError):
+        first = error.errors()[0]
         where = ".".join(str(part) for part in first["loc"])
-        # above: converts each item in first["loc"] to a string, then joins them with periods
         return f"{where}: {first['msg']}"
-        # above it creates and returns a formatted string containing where, a colon and space, and the error message from first["msg"]
-        # example body.requests.2.prompt: Field required
     return str(error)
 
 
 def parse_requests(raw: Any) -> List[LlmRequest]:
     """
     Parse a JSON list of requests to the LLM into a list of LlmRequest objects.
-    """   
-    
+    """
+
     if not isinstance(raw, list):
         raise ValueError("requests must be a JSON list of objects")
     requests: List[LlmRequest] = []

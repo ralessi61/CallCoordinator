@@ -21,7 +21,6 @@ class TestExceptions(unittest.TestCase):
 
 
     def test_rate_limit_inheritance(self):
-        error = RateLimitError("quota")
         self.assertTrue(issubclass(RateLimitError, TransientError))
         self.assertFalse(issubclass(RateLimitError, PermanentError))
 

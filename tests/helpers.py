@@ -2,6 +2,7 @@
 
 import asyncio
 import functools
+from collections.abc import Awaitable
 from unittest.mock import MagicMock
 
 
@@ -55,7 +56,8 @@ def async_mock(side_effect=None, return_value=None):
             outcome = side_effect
         elif callable(side_effect):
             outcome = side_effect(*args, **kwargs)
-            if hasattr(outcome, "__await__"):
+            # isinstance narrows outcome to Awaitable, which has __await__.
+            if isinstance(outcome, Awaitable):
                 outcome = await outcome
             return outcome
         else:

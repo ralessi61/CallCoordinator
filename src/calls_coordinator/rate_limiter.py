@@ -24,20 +24,18 @@ class RateLimiter:
         self._lock = threading.Lock()
         # the thread strategy runs several event loops, asyncio.Lock belongs to 1 loop
 
-
     def _reserve(self) -> float:
         """Take one token and return how long the caller must wait for it."""
 
         with self._lock:
             # update the number of tokens based on the time since the last update
-            now = time.perf_counter()          
+            now = time.perf_counter()
             # take the minimum of the burst and the number of tokens that have accumulated since the last update
             # perf_counter() high-resolution clock value in seconds, intended for measuring elapsed time
             self._tokens = min(self._burst, self._tokens + (now - self._updated) * self._rate)
             self._updated = now
             self._tokens -= 1.0
             return max(0.0, -self._tokens / self._rate)
-        
 
     async def acquire(self) -> float:
         """Wait until a call may start. Returns the seconds waited."""

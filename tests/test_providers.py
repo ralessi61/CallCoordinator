@@ -5,7 +5,7 @@ from calls_coordinator.exceptions import (
     RateLimitError,
     UnknownProviderError,
 )
-from calls_coordinator.models import LlmRequest, LlmResponse
+from calls_coordinator.models import LlmRequest, LlmResponse, TaskType
 from calls_coordinator.providers.base import ProviderMeta
 from calls_coordinator.providers.base import (
     BaseProvider,
@@ -27,7 +27,7 @@ def request(i: int = 1) -> LlmRequest:
     return LlmRequest(
         request_id=f"r{i}",
         document_id="d",
-        task_type="summary",
+        task_type=TaskType.SUMMARY,
         prompt="bonjour",
         provider="fast",
     )
@@ -50,7 +50,7 @@ class RegistryTests(unittest.TestCase):
         class EchoProvider(BaseProvider):
             name = "echo-test"
 
-            async def complete(self, request):  # pragma: no cover - never called
+            async def complete(self, testrequest):  # pragma: no cover - never called
                 raise NotImplementedError
 
         try:
@@ -64,12 +64,18 @@ class RegistryTests(unittest.TestCase):
     def test_duplicate_name_is_rejected(self) -> None:
         """ Ensure that attempting to register a provider with a duplicate name raises a TypeError."""
 
-        with self.assertRaises(TypeError):
+        def declare_clash() -> type:
             class Clash(BaseProvider):
                 name = "fast"
 
-                async def complete(self, request):  # pragma: no cover
+                async def complete(self, testrequest):  # pragma: no cover
                     raise NotImplementedError
+
+            return Clash  # pragma: no cover - registration raises before this line
+
+        with self.assertRaises(TypeError) as ctx:
+            declare_clash()
+        self.assertIn("already registered", str(ctx.exception))
 
     
     def test_unknown_provider(self) -> None:
@@ -87,9 +93,10 @@ class RegistryTests(unittest.TestCase):
         before = list(registered_providers())
 
         class Helper(BaseProvider):
-            async def complete(self, request):  # pragma: no cover
+            async def complete(self, testrequest):  # pragma: no cover
                 raise NotImplementedError
 
+        self.assertNotIn(Helper, ProviderMeta.registry.values())
         self.assertEqual(registered_providers(), before)
 
 

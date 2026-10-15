@@ -16,9 +16,11 @@ import asyncio
 import threading
 from typing import Any, Awaitable, Callable, List
 
-Job = Callable[[], Awaitable[Any]]  
+Job = Callable[[], Awaitable[Any]]
 OnResult = Callable[[int, Any], None]
-# Callable[[...], ...] describes the function’s argument and return types. 
+
+
+# Callable[[...], ...] describes the function’s argument and return types.
 # Awaitable[Any] means the returned value can be awaited; Any means its type isn’t specified, as in Typescript.
 
 class ConcurrencyStrategy:
@@ -42,7 +44,7 @@ class SequentialStrategy(ConcurrencyStrategy):
     name = "sequential"
 
     def __init__(self, max_concurrency: int = 1) -> None:
-            super().__init__(1)
+        super().__init__(1)
 
     async def run(self, jobs: List[Job], on_result: OnResult) -> None:
         """
@@ -95,7 +97,7 @@ class ThreadingStrategy(ConcurrencyStrategy):
 
     def cancel(self) -> None:
         """Skip every job that has not started yet."""
-        
+
         self._cancelled = True
 
     async def run(self, jobs: List[Job], on_result: OnResult) -> None:
@@ -140,4 +142,3 @@ def create_strategy(name: str, max_concurrency: int) -> ConcurrencyStrategy:
             f"unknown strategy {name!r}: choose one of {', '.join(sorted(STRATEGIES))}"
         )
     return STRATEGIES[name](max_concurrency)
-

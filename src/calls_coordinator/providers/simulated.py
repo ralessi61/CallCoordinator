@@ -14,7 +14,7 @@ import time
 from typing import Optional
 
 from ..exceptions import ProviderTimeoutError, RateLimitError
-from ..models import LlmRequest,LlmResponse, TokenUsage, estimate_tokens
+from ..models import LlmRequest, LlmResponse, TokenUsage, estimate_tokens
 from .base import BaseProvider
 
 
@@ -26,14 +26,12 @@ class SimulatedProvider(BaseProvider):
         self._latency = latency
         self._random = random.Random(seed)
 
-    
     async def _wait(self) -> float:
         """Wait for a random latency and return the delay in seconds."""
 
         delay = self._random.uniform(*self._latency)
         await asyncio.sleep(delay)
         return delay
-    
 
     def _answer(self, request: LlmRequest, latency: float) -> LlmResponse:
         """Build a simulated answer for the request."""
@@ -70,17 +68,17 @@ class FastProvider(SimulatedProvider):
 
 
 class SlowProvider(SimulatedProvider):
-    """Variable latency; a fraction of calls end in a timeout."""
+    """Variable latency; a fraction of calls ends in a timeout."""
 
     name = "slow"
 
     def __init__(
-        self,
-        latency: tuple = (0.2, 1.0),
-        timeout_rate: float = 0.15,
-        seed: Optional[int] = None,
+            self,
+            latency: tuple = (0.2, 1.0),
+            timeout_rate: float = 0.15,
+            seed: Optional[int] = None,
     ) -> None:
-        super().__init__(latency, seed) # calls the parent class initialize
+        super().__init__(latency, seed)  # calls the parent class initialize
         self._timeout_rate = timeout_rate
 
     async def complete(self, request: LlmRequest) -> LlmResponse:
@@ -104,11 +102,11 @@ class StrictProvider(SimulatedProvider):
     name = "strict"
 
     def __init__(
-        self,
-        max_calls: int = 5,
-        window: float = 1.0,
-        latency: tuple = (0.01, 0.03),
-        seed: Optional[int] = None,
+            self,
+            max_calls: int = 5,
+            window: float = 1.0,
+            latency: tuple = (0.01, 0.03),
+            seed: Optional[int] = None,
     ) -> None:
         super().__init__(latency, seed)
         self._max_calls = max_calls
@@ -126,7 +124,6 @@ class StrictProvider(SimulatedProvider):
                 raise RateLimitError("rate limit exceeded")
             self._stamps.append(now)
 
-    
     async def complete(self, request: LlmRequest) -> LlmResponse:
         """Take a slot, wait for a random latency delay, and return the answer."""
 
